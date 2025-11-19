@@ -1,3 +1,5 @@
+using System;
+using System.Linq;
 using static System.Console;
 
 public class UX
@@ -33,10 +35,10 @@ public class UX
         {
             case "1": CriarConta(); break;
             case "2": MenuListarContas(); break;
-            case "3": EfetuarSaque(); break; 
-            case "4": EfetuarDeposito(); break;
-            case "5": AumentarLimite(); break; 
-            case "6": DiminuirLimite(); break; 
+            case "3": EfetuarSaque(); break;     
+            case "4": EfetuarDeposito(); break;   
+            case "5": AumentarLimite(); break;   
+            case "6": DiminuirLimite(); break;  
         }
 
         if (opcao != "9")
@@ -47,14 +49,17 @@ public class UX
     }
 
     // Implementações de Funcionalidades
+
     private void CriarConta()
     {
         CriarTitulo(_titulo + " - Criar Conta");
-    
+
         int numero;
+        
         while (true)
         {
             Write(" Numero:  ");
+            
             if (int.TryParse(ReadLine(), out numero) && numero > 0)
             {
                 if (_banco.Contas.Any(c => c.Numero == numero))
@@ -64,7 +69,7 @@ public class UX
                 }
                 break;
             }
-            CriarRodape("ERRO: Número de conta inválido. Tente novamente.");
+            CriarRodape("ERRO: Número de conta inválido. Pressione ENTER para tentar novamente.");
         }
 
         Write(" Cliente: ");
@@ -75,14 +80,16 @@ public class UX
         var senha = ReadLine() ?? "";
         
         decimal limite;
+        
         while (true)
         {
             Write(" Limite:  ");
+            // Tenta converter para decimal e garante que é não negativo
             if (decimal.TryParse(ReadLine(), out limite) && limite >= 0)
             {
                 break;
             }
-            CriarRodape("ERRO: Limite inválido. Tente novamente.");
+            CriarRodape("ERRO: Limite inválido. Pressione ENTER para tentar novamente.");
         }
 
         var conta = new Conta(numero, cliente, cpf, senha, limite);
@@ -113,7 +120,7 @@ public class UX
     private void EfetuarSaque()
     {
         CriarTitulo(_titulo + " - Efetuar Saque");
-        var conta = LocalizarConta(out string senha);
+        var conta = LocalizarContaComSenha(out string senha);
 
         if (conta == null) return;
         
@@ -144,7 +151,7 @@ public class UX
     private void EfetuarDeposito()
     {
         CriarTitulo(_titulo + " - Efetuar Depósito");
-        var conta = LocalizarConta();
+        var conta = LocalizarContaSemSenha(); 
 
         if (conta == null) return;
 
@@ -163,7 +170,7 @@ public class UX
     private void AumentarLimite()
     {
         CriarTitulo(_titulo + " - Aumentar Limite");
-        var conta = LocalizarConta(out string senha);
+        var conta = LocalizarContaComSenha(out string senha);
         
         if (conta == null) return;
         
@@ -175,21 +182,22 @@ public class UX
         
         Write($" Limite Atual: {conta.Limite:C}\n");
         Write(" Novo Limite: ");
-        if (decimal.TryParse(ReadLine(), out decimal novoLimite) && novoLimite >= conta.Limite)
+        
+        if (decimal.TryParse(ReadLine(), out decimal novoLimite) && novoLimite > conta.Limite) 
         {
             conta.AumentarLimite(novoLimite);
             CriarRodape($"Limite aumentado para {conta.Limite:C} com sucesso.");
         }
         else
         {
-            CriarRodape("ERRO: Novo limite inválido ou menor que o limite atual.");
+            CriarRodape("ERRO: Novo limite inválido ou não é maior que o limite atual.");
         }
     }
 
     private void DiminuirLimite()
     {
         CriarTitulo(_titulo + " - Diminuir Limite");
-        var conta = LocalizarConta(out string senha);
+        var conta = LocalizarContaComSenha(out string senha);
         
         if (conta == null) return;
 
@@ -201,7 +209,8 @@ public class UX
         
         Write($" Limite Atual: {conta.Limite:C}\n");
         Write(" Novo Limite: ");
-        if (decimal.TryParse(ReadLine(), out decimal novoLimite) && novoLimite <= conta.Limite)
+        
+        if (decimal.TryParse(ReadLine(), out decimal novoLimite) && novoLimite < conta.Limite)
         {
             if (conta.DiminuirLimite(novoLimite))
             {
@@ -209,20 +218,19 @@ public class UX
             }
             else
             {
-                CriarRodape("ERRO: Não é possível diminuir o limite pois excederia o Saldo Disponível.");
+                CriarRodape("ERRO: Não é possível diminuir o limite, pois o Saldo + Novo Limite ficaria negativo.");
             }
         }
         else
         {
-            CriarRodape("ERRO: Novo limite inválido ou maior que o limite atual.");
+            CriarRodape("ERRO: Novo limite inválido ou não é menor que o limite atual.");
         }
     }
 
-    // Métodos Auxiliares
-    /// <summary>Localiza uma conta no banco pelo número.</summary>
-    /// <param name="senhaDigitada">Parâmetro de saída para a senha digitada pelo usuário (opcional).</param>
-    /// <returns>A conta encontrada ou null se não encontrada.</returns>
-    private Conta? LocalizarConta(out string senhaDigitada)
+    // Métodos Auxiliares de Localização
+
+    /// <summary>Localiza uma conta e solicita a senha.</summary>
+    private Conta? LocalizarContaComSenha(out string senhaDigitada)
     {
         senhaDigitada = "";
         Write(" Número da Conta: ");
@@ -245,9 +253,8 @@ public class UX
         return conta;
     }
     
-    /// <summary>Localiza uma conta no banco pelo número (sem pedir senha).</summary>
-    /// <returns>A conta encontrada ou null se não encontrada.</returns>
-    private Conta? LocalizarConta()
+    /// <summary>Localiza uma conta sem solicitar senha.</summary>
+    private Conta? LocalizarContaSemSenha()
     {
         Write(" Número da Conta: ");
         if (!int.TryParse(ReadLine(), out int numeroConta))
@@ -265,7 +272,8 @@ public class UX
         return conta;
     }
     
-    // Métodos
+    // Métodos de UI (Sem Alterações)
+
     private void CriarLinha()
     {
         WriteLine("-------------------------------------------------");
