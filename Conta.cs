@@ -18,8 +18,7 @@ public class Conta
         Cliente = cliente;
         Cpf = cpf;
         Senha = senha;
-        Limite = limite;
-        // O saldo será carregado do JSON ou será 0 por padrão
+        Limite = limites
     }
 
     // Métodos de negócios adicionados
@@ -58,7 +57,6 @@ public class Conta
     /// <returns>Retorna <c>true</c> se o limite foi diminuído com sucesso.</returns>
     public bool DiminuirLimite(decimal novoLimite)
     {
-        // Verifica se a redução do limite não deixa o saldo disponível negativo
         if (novoLimite < Limite && Saldo + novoLimite >= 0)
         {
             Limite = novoLimite;
