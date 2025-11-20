@@ -84,7 +84,7 @@ public class UX
         while (true)
         {
             Write(" Limite:  ");
-            // Tenta converter para decimal e garante que é não negativo
+            
             if (decimal.TryParse(ReadLine(), out limite) && limite >= 0)
             {
                 break;
